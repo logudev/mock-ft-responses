@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { MockResponseTestCaseModel } = require('../models/mockResponse');
+const { formatUnhandledErrors } = require('./util');
 
 // @desc    Get all testCase objects - if both testCaseName and serviceName are not provided
 // @desc    Get a single testCase object - if testCaseName alone is provided
@@ -34,69 +35,71 @@ exports.getMockResponsesForTestCases = async (req, res, next) => {
     }
   } catch (err) {
     // Any error caught here will be treated as server error
-    console.error(err.message);
-    return res.status(500).json({
-      success: false,
-      error: 'Server Error',
-    });
+    formatUnhandledErrors(err);
   }
 };
 
+// @desc    Creates a new testCaseName object and adds serviceName object to it with serviceResponse - if testCaseName is not present
+// @desc    Adds a serviceName object to testCaseName object, if testCaseName is present, but serviceName is not present
+// @desc    Updates serviceName object with passed serviceResponse, if serviceName is already present
+// @route   POST /api/mockResponses
 exports.addMockResponse = async (req, res, next) => {
   const { testCaseName, serviceName, serviceResponse } = req.body;
   // Checking if testCaseName is already available
-  MockResponseTestCaseModel.findOne({ testCaseName }).then(
-    (mockResponseObject) => {
-      if (mockResponseObject) {
-        const mockResponsesForTestCase = mockResponseObject.mockResponses;
-        let isServiceNameAlreadyPresent = false;
-        mockResponsesForTestCase.forEach((service) => {
-          if (service.serviceName === serviceName) {
-            service.serviceResponse = serviceResponse;
-            (service.status = 'SILVER'), (service.createdAt = Date.now());
-            isServiceNameAlreadyPresent = true;
-          }
+  try {
+    const mockResponseObject = await MockResponseTestCaseModel.findOne({
+      testCaseName,
+    });
+    // Already existing testCaseName
+    if (mockResponseObject) {
+      const mockResponsesForTestCase = mockResponseObject.mockResponses;
+      let isServiceNameAlreadyPresent = false;
+      // Iterating through serviceNames of testCaseName object to see if it is already present.
+      // If present, modifying the serviceResponse, status, createdAt attibutes with latest values
+      mockResponsesForTestCase.forEach((service) => {
+        if (service.serviceName === serviceName) {
+          service.serviceResponse = serviceResponse;
+          service.status = 'SILVER';
+          service.createdAt = Date.now();
+          isServiceNameAlreadyPresent = true;
+        }
+      });
+      // If not present, fresh object with latest serviceResponse, status, createdAt values are pushed to testCaseName object
+      if (!isServiceNameAlreadyPresent) {
+        mockResponsesForTestCase.push({
+          serviceName,
+          serviceResponse,
+          status: 'SILVER',
+          createdAt: Date.now(),
         });
-        if (!isServiceNameAlreadyPresent) {
-          mockResponsesForTestCase.push({
+      }
+      const savedMockResponseObject = await mockResponseObject.save();
+      return res.status(201).json({
+        success: true,
+        data: savedMockResponseObject,
+      });
+    }
+    // Not an existing testCaseName, create new testCaseName obj with serviceName obj
+    else {
+      const newTestCaseNameObject = await MockResponseTestCaseModel.create({
+        testCaseName,
+        mockResponses: [
+          {
             serviceName,
             serviceResponse,
             status: 'SILVER',
-            createdAt: Date.now(),
-          });
-        }
-        mockResponseObject
-          .save()
-          .then((savedMockResponseObject) => {
-            return res.status(201).json({
-              success: true,
-              data: savedMockResponseObject,
-            });
-          })
-          .catch((err) => {
-            console.log(err.errors);
-          });
-      }
-      // Not an existing testCaseName
-      else {
-        const check = MockResponseTestCaseModel.create({
-          testCaseName,
-          mockResponses: [
-            {
-              serviceName,
-              serviceResponse,
-              status: 'SILVER',
-            },
-          ],
-        }).then((obj) => {
-          return res.status(201).json({
-            success: true,
-            data: obj,
-          });
-        });
-      }
+          },
+        ],
+      });
+      return res.status(201).json({
+        success: true,
+        data: newTestCaseNameObject,
+      });
     }
-  );
+  } catch (err) {
+    // Any error caught here will be treated as server error
+    formatUnhandledErrors(err);
+  }
 };
 
 // @desc  Mark status of all serviceNames as GOLD in a testCase object - if testCaseName queryParam is provided
@@ -131,11 +134,7 @@ exports.markTestCaseStatusAsGold = async (req, res) => {
       }
     } catch (err) {
       // Any error caught here will be treated as server error
-      console.error(err.message);
-      return res.status(500).json({
-        success: false,
-        error: 'Server Error',
-      });
+      formatUnhandledErrors(err);
     }
   }
   // No testCaseName was provided
@@ -181,10 +180,6 @@ exports.deleteMockResponsesForTestCases = async (req, res, next) => {
     }
   } catch (err) {
     // Any error caught here will be treated as server error
-    console.error(err.message);
-    return res.status(500).json({
-      success: false,
-      error: 'Server Error',
-    });
+    formatUnhandledErrors(err);
   }
 };
