@@ -9,7 +9,8 @@
 * Framework: Express 
 * Data Modelling: Mongoose
 * DB: Mongo DB
-* PAAS: GCP with PayPal Network - 10.176.20.197
+* PAAS: GCP - Ubuntu within PayPal Network - 10.176.20.197
+* Server Monitor - Forever - https://www.npmjs.com/package/forever
 
 ## Mongo Connection URI:
 * mongodb://logd:stage2%40qa@10.176.20.197:27017/mockResponses?authSource=mockResponses&readPreference=primary&ssl=false
