@@ -23,16 +23,16 @@
 
 **GET:**
 * URI: http://10.176.20.197:5000/api/mockResponses/
-1) Get all testCase objects with its underlying service response objects
+1) Get all testCase objects with its underlying service response objects.   
 queryParam: None
-2) Get single testCase object with its underlying service response objects
+2) Get single testCase object with its underlying service response objects.   
 queryParam: testCaseName
-3) Get single service response of a testCase object
+3) Get single service response of a testCase object.   
 queryParam: testCaseName, serviceName
 
 **POST:**
 * URI: http://10.176.20.197:5000/api/mockResponses/
-1) Adds the serviceResponse to its corresponding serviceName in corresponding testCaseName
+1) Adds the serviceResponse to its corresponding serviceName in corresponding testCaseName.  
 Sample Body:
 ```
 {   
@@ -48,10 +48,11 @@ Sample Body:
 * If testCaseName is not already present, it will create newly.
 * If serviceName already has a serviceResponse, it will override with new serviceResponse passed
 * Will use current time as createdAt for the serviceName
-* By default, status of serviceName will be set to SILVER
+* By default, status of serviceName will be set to SILVER.   
 
+**POST:**   
 * URI: http://10.176.20.197:5000/api/mockResponses/markStatus
-2) Marks the status of all serviceNames in a testCaseName object as GOLD.
+2) Marks the status of all serviceNames in a testCaseName object as GOLD.   
 Sample Body:
 ```
 {
@@ -61,9 +62,9 @@ Sample Body:
 
 **DELETE:**
 * URI: http://10.176.20.197:5000/api/mockResponses/
-1) Deletes a single testCaseName object and its service responses
+1) Deletes a single testCaseName object and its service responses.   
 queryParam: testCaseName
 * **DANGER**
-2) Deletes all testCaseName objects - Equivalent to wiping out the DB
+2) Deletes all testCaseName objects - Equivalent to wiping out the DB.   
 queryParam: none
 
